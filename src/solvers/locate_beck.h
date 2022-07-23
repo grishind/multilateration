@@ -4,6 +4,7 @@
 #include <basics.h>
 
 #include <Eigen/Dense>
+#include <Eigen/Eigenvalues>
 
 #include <vector>
 
@@ -17,6 +18,7 @@ namespace PseudorangeMultilateration {
                 , value_column(locators.size())
                 , proj_mat (4, 4)
                 , q_vec(4)
+                , position_square(4, 4)
         {
             const int n = static_cast<int>(locators.size());
             for (int i = 0; i < n; ++i) {
@@ -25,6 +27,8 @@ namespace PseudorangeMultilateration {
                                        2 * locators[i].position.z(),
                                        -1;
             }
+
+            position_square = position_mat.transpose() * position_mat;
 
             for (int i = 0; i < n; ++i)
             {
@@ -37,9 +41,19 @@ namespace PseudorangeMultilateration {
             q_vec << 0, 0, 0, -1./2.;
         }
 
-        Eigen::Vector4d getZVec(double lambda) {
+        [[nodiscard]] double FindLeftValue() const {
+            Eigen::GeneralizedEigenSolver<Eigen::MatrixXd> ges(proj_mat, position_square);
+            //std::cout << "The (complex) numerators of the generalzied eigenvalues are: " << ges.alphas().transpose() << '\n';
+            //std::cout << "The (real) denominatore of the generalzied eigenvalues are: " << ges.betas().transpose() << '\n';
+            //std::cout << "The (complex) generalzied eigenvalues are (alphas./beta): " << ges.eigenvalues().transpose() << '\n';
+            const double max_eigen = ges.eigenvalues().transpose().real().maxCoeff();
+            //std::cout << "Maximal eigen: " << max_eigen << '\n';
+            return - 1. / max_eigen;
+        }
+
+        [[nodiscard]] Eigen::Vector4d getZVec(double lambda) const {
             Eigen::MatrixXd trans = position_mat.transpose();
-            Eigen::MatrixXd mat = trans * position_mat + lambda * proj_mat;
+            Eigen::MatrixXd mat = position_square + lambda * proj_mat;
             Eigen::MatrixXd inv = mat.inverse();
             Eigen::Vector4d vec = trans * value_column - lambda * q_vec;
             return inv * vec;
@@ -49,18 +63,18 @@ namespace PseudorangeMultilateration {
             return vec(0) * vec(0) + vec(1) * vec(1) + vec(2) * vec(2) - vec(3);
         }
 
-        double target(double lambda) {
+        [[nodiscard]] double target(double lambda) const {
             auto z_vec = getZVec(lambda);
             return target(z_vec);
         }
 
-        double bisection(double left) {
+        [[nodiscard]] double bisection(double left) const {
             double length = 1;
             while (target(left + length) > 0) {
                 length *= 2;
             }
             double right = left + length;
-            while (right - left > 1e-5) {
+            while (right - left > 1e-11) {
                 const double mid = left + (right - left) / 2;
                 if (target(mid) > 0) {
                     left = mid;
@@ -69,11 +83,25 @@ namespace PseudorangeMultilateration {
                     right = mid;
                 }
             }
-            return left;
+            const double mid = left + (right - left) / 2;
+            const double val = target(mid);
+            //if (left > 0 && val * val > 0.0001) {
+            /*if (left <= 0) {
+                std::cout << "-------------------------\n";
+                std::cout << "left: " << left << '\n';
+                std::cout << "mid: " << mid << '\n';
+                std::cout << "right: " << right << '\n';
+                std::cout << "target(left): " << target(left) << '\n';
+                std::cout << "target(mid): " << val << '\n';
+                std::cout << "target(right): " << target(right) << '\n';
+                std::cout << "-------------------------\n";
+            }*/
+            return mid;
         }
 
-        Vector3d solve() {
-            const double lambda = bisection(0);
+        [[nodiscard]] Vector3d solve() const {
+            const double left = FindLeftValue();
+            const double lambda = bisection(left);
             const auto z_vec = getZVec(lambda);
             return { z_vec(0), z_vec(1), z_vec(2) };
         }
@@ -83,6 +111,8 @@ namespace PseudorangeMultilateration {
         Eigen::VectorXd value_column;
         Eigen::MatrixX4d proj_mat;
         Eigen::Vector4d q_vec;
+
+        Eigen::MatrixX4d position_square;
     };
 
     Vector3d locate_beck(const std::vector<LocatorData>& locators)
