@@ -25,6 +25,12 @@ namespace PseudorangeMultilateration {
         );
     }
 
+    Scene GenerateOrbitalScene(int planes_count, int sat_per_plane) {
+        const double earth_radius = 6371;
+        const Vector3d target{ 0, 0, earth_radius };
+        return {};
+    }
+
     vector<double> CollectMethodErrors(RandomSceneGenerator& generator,
                                        const Solver& solver,
                                        int locators_count,
@@ -116,12 +122,13 @@ namespace PseudorangeMultilateration {
         return TestNoiseError(generator, solver, scene, deviations);
     }
 
-    vector<NoisySelection> CreateNoisySelection(const Scene& scene,
+    vector<NoisySelection> CreateNoisySelection(int count,
+                                                const Scene& scene,
                                                 const vector<double>& deviations,
                                                 RandomSceneGenerator& generator) {
         vector<NoisySelection> noisy_selection;
         for (double dev : deviations) {
-            const vector<Scenario> scenarios = generator.CreateNoisyScenarios(scene, dev, 1000);
+            const vector<Scenario> scenarios = generator.CreateNoisyScenarios(scene, dev, count);
             noisy_selection.push_back({scenarios, dev});
         }
         return noisy_selection;
@@ -132,12 +139,12 @@ namespace PseudorangeMultilateration {
                                                             RandomSceneGenerator& generator) {
         const Scene scene = GenerateDiagonalCubicScene(generator, locators_count);
         const vector<double> deviations = ComputeSelection(0, 2000, 100);
-        const vector<NoisySelection> noisy_selection = CreateNoisySelection(scene, deviations, generator);
+        const vector<NoisySelection> noisy_selection = CreateNoisySelection(100, scene, deviations, generator);
 
         vector<StatisticsPoint> stat_graph(noisy_selection.size());
         {
             int counter = 0;
-            #pragma omp parallel for default(none) shared(counter, noisy_selection, solvers, stat_graph, std::cout)
+            //#pragma omp parallel for default(none) shared(counter, noisy_selection, solvers, stat_graph, std::cout)
             for (size_t i = 0; i < noisy_selection.size(); ++i) {
                 const auto& selection = noisy_selection.at(i);
                 vector<NamedStatistics> stats;

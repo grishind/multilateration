@@ -18,7 +18,7 @@ void PrintStatisticsPoints(const std::vector<StatisticsPoint>& stat_graph, std::
 int main() {
     RandomSceneGenerator generator(666);
     const vector<Solver> solvers{
-           //{ locate_zhil, "zhil" },
+           { locate_zhil, "zhil" },
            //{ locate_simple, "simple" },
            //{ locate_bancroft, "bancroft" }
            //{ locate_grad, "grad" }
@@ -47,9 +47,10 @@ int main() {
     }
      */
 
-    std::string base_filename = "beck_";
+    std::string base_filename = "zhil_beck_";
     std::string tail_filename = "loc_1200km_log100.txt";
-    for (int locators_count : {3, 4, 5, 6, 7, 10, 20, 100}) {
+    //for (int locators_count : {3, 4, 5, 6, 7, 10, 20, 100}) {
+    for (int locators_count : {4}) {
         std::string dyn_filename = base_filename;
         dyn_filename += std::to_string(locators_count);
         dyn_filename += tail_filename;
