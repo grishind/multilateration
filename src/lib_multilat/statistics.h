@@ -69,12 +69,13 @@ namespace PseudorangeMultilateration {
     vector<double> ComputeSelection(double min_val, double max_val, int steps) {
         vector<double> selection;
         selection.reserve(steps + 1);
+        const double min_log = std::log(min_val);
+        const double max_log = std::log(max_val);
+        const double diff_log = max_log - min_log;
         for (int i = 0; i <= steps; ++i) {
             const double portion = static_cast<double>(i) / steps;
-            const double dist_log = std::log(max_val - min_val);
-            const double step_log = dist_log * portion;
-            const double step = std::exp(step_log);
-            const double value = min_val + step;
+            const double cur_log = min_log + portion * diff_log;
+            const double value = std::exp(cur_log);
             selection.push_back(value);
         }
         return selection;
@@ -138,13 +139,13 @@ namespace PseudorangeMultilateration {
                                                             const vector<Solver>& solvers,
                                                             RandomSceneGenerator& generator) {
         const Scene scene = GenerateDiagonalCubicScene(generator, locators_count);
-        const vector<double> deviations = ComputeSelection(0, 2000, 100);
-        const vector<NoisySelection> noisy_selection = CreateNoisySelection(100, scene, deviations, generator);
+        const vector<double> deviations = ComputeSelection(1e-3, 2000, 100);
+        const vector<NoisySelection> noisy_selection = CreateNoisySelection(1000, scene, deviations, generator);
 
         vector<StatisticsPoint> stat_graph(noisy_selection.size());
         {
             int counter = 0;
-            //#pragma omp parallel for default(none) shared(counter, noisy_selection, solvers, stat_graph, std::cout)
+            #pragma omp parallel for default(none) shared(counter, noisy_selection, solvers, stat_graph, std::cout)
             for (size_t i = 0; i < noisy_selection.size(); ++i) {
                 const auto& selection = noisy_selection.at(i);
                 vector<NamedStatistics> stats;

@@ -78,8 +78,8 @@ namespace PseudorangeMultilateration {
         }
 
         [[nodiscard]] vector<Vector3d> NoisifyPoints(const vector<Vector3d>& points, double deviation) {
-            vector<Vector3d> noisy_points(points.size());
-            std::transform(points.begin(), points.end(), noisy_points.begin(),
+            vector<Vector3d> noisy_points;
+            std::transform(points.begin(), points.end(), std::back_inserter(noisy_points),
                            [this, deviation](const Vector3d& point) {
                                return NoisifyPoint(point, deviation);
                            });
