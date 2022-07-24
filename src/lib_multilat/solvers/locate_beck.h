@@ -76,6 +76,9 @@ namespace PseudorangeMultilateration {
             double right = left + length;
             while (right - left > 1e-11) {
                 const double mid = left + (right - left) / 2;
+                if (mid <= left || mid >= right) {
+                    break;
+                }
                 if (target(mid) > 0) {
                     left = mid;
                 }

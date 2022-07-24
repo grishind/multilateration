@@ -7,7 +7,6 @@
 
 #include <vector>
 
-
 namespace PseudorangeMultilateration {
 
     bool is_surface(const Vector3d& position, double sigma)
