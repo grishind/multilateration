@@ -13,6 +13,7 @@ add_library (multilat INTERFACE
         solvers/locate_bancroft.h
         solvers/locate_beck.h
         solvers/locate_grad.h
+        solvers/locate_linear.h
         solvers/locate_simple.h
         solvers/locate_zhil.h
         statistics.h

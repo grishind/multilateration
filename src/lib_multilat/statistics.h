@@ -3,11 +3,6 @@
 #include <basics.h>
 #include <scenegenerator.h>
 #include <solver.h>
-#include <solvers/locate_bancroft.h>
-#include <solvers/locate_beck.h>
-#include <solvers/locate_grad.h>
-#include <solvers/locate_simple.h>
-#include <solvers/locate_zhil.h>
 #include <utils.h>
 
 #include <algorithm>
